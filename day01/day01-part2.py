@@ -1,17 +1,21 @@
+from collections import namedtuple
 from functools import reduce
 from re import match
 
+Turn = namedtuple('Turn', 'amount direction')
+State = namedtuple('State', 'position clicks')
+
 def turn(line):
     (direction, amount) = match('(\\w)(\\d+)', line).groups()
-    return int(amount), {'L': -1, 'R': +1}[direction]
+    return Turn(int(amount), {'L': -1, 'R': +1}[direction])
 
 def apply_turn(state, this_turn):
-    new_pos = state[0] + this_turn[0] * this_turn[1]
-    clicks = abs(this_turn[1] * state[0] // 100 - this_turn[1] * new_pos // 100)
-    return new_pos, state[1] + clicks
+    new_position = state.position + this_turn.amount * this_turn.direction
+    clicks = abs(this_turn.direction * state.position // 100 - this_turn.direction * new_position // 100)
+    return State(new_position, state.clicks + clicks)
 
 def password():
     entries = open('input/actual.txt').read().splitlines()
-    return reduce(apply_turn, map(turn, entries), (50, 0))[1]
+    return reduce(apply_turn, map(turn, entries), State(50, 0)).clicks
 
 print(password())
